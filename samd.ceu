@@ -1,0 +1,5 @@
+#define CEU_SAMD_WAIT(x) while ((x).STATUS.bit.SYNCBUSY == 1)
+
+native/pre do
+    ##define CEU_ISR(id) void id (void)
+end
