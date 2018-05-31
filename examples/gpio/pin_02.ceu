@@ -8,6 +8,7 @@
 input high/low PIN_02;
 
 #define GPIO_PIN 14
+#define GPIO_PIN_MASK (1<<GPIO_PIN)
 
 {
     ceu_assert(GPIO_PIN == EXTERNAL_INT_14,      "bug found");
@@ -39,7 +40,7 @@ input high/low PIN_02;
         EIC->CTRL.bit.ENABLE = 1;
         CEU_SAMD_WAIT(*EIC);
     }
-    EIC->WAKEUP.reg |= (1<<GPIO_PIN);
+    EIC->WAKEUP.reg |= GPIO_PIN_MASK;
     {
         u32 tmp = (PORT->Group[PORTA].PMUX[GPIO_PIN >> 1].reg) & PORT_PMUX_PMUXO(0xF) ;
         PORT->Group[PORTA].PMUX[GPIO_PIN >> 1].reg = tmp|PORT_PMUX_PMUXE(PIO_EXTINT) ;
@@ -51,13 +52,15 @@ input high/low PIN_02;
         EIC->CONFIG[config].reg &=~ (EIC_CONFIG_SENSE0_Msk << pos);
         EIC->CONFIG[config].reg |= EIC_CONFIG_SENSE0_BOTH_Val << pos;
     }
-    EIC->INTENSET.reg = EIC_INTENSET_EXTINT(1<<GPIO_PIN);
+    EIC->INTENSET.reg = EIC_INTENSET_EXTINT(GPIO_PIN_MASK);
 }
 
 native/const _EIC_Handler;
 spawn async/isr [_EIC_Handler] do
-    emit PIN_02(_digitalRead(2));
-    { EIC->INTFLAG.reg = 1<<GPIO_PIN; }
+    if {EIC->INTFLAG.reg & GPIO_PIN_MASK} != 0 then
+        emit PIN_02(_digitalRead(2));
+        { EIC->INTFLAG.reg = GPIO_PIN_MASK; }
+    end
 end
 
 _pinMode(13, _OUTPUT);
