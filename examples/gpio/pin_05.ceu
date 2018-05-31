@@ -1,24 +1,24 @@
 /*
  * BUTTON => LED
- * Button press/release connected to PIN_02 generates an interrupt.
- * Interrupt generates "emit PIN_02" passing the button state.
- * Main program changes LED connected to PIN13 according to the button state.
+ * Button press/release connected to PIN_05 generates an interrupt.
+ * Interrupt generates "emit PIN_05" passing the button state.
+ * Main program changes LED connected to PIN15 according to the button state.
  */
 
-input high/low PIN_02;
+input high/low PIN_05;
 
-#define GPIO_PIN 14
+#define GPIO_PIN 15
 
 {
-    ceu_assert(GPIO_PIN == EXTERNAL_INT_14,      "bug found");
-    ceu_assert(EXTERNAL_INT_14 > EXTERNAL_INT_7, "bug found");
-    ceu_assert((GPIO_PIN & 1) == 0,              "bug found");
+    ceu_assert(GPIO_PIN == EXTERNAL_INT_15,      "bug found");
+    ceu_assert(EXTERNAL_INT_15 > EXTERNAL_INT_7, "bug found");
+    ceu_assert((GPIO_PIN & 1) == 1,              "bug found");
 
-    pinMode(2, INPUT_PULLDOWN);
+    pinMode(5, INPUT_PULLDOWN);
     // cores/arduino/WInterrupts.c
     // variants/arduino_zero/variant.cpp
     //  Port, Pin, PinType,     PinAttribute,       ADCChannelN,    PWMChannel, TCCChannel,   ExtInt
-    //{ PORTA, 14, PIO_DIGITAL, (PIN_ATTR_DIGITAL), No_ADC_Channel, NOT_ON_PWM, NOT_ON_TIMER, EXTERNAL_INT_14 },
+    //{ PORTA, 15, PIO_TIMER, (PIN_ATTR_DIGITAL|PIN_ATTR_PWM|PIN_ATTR_TIMER), No_ADC_Channel, PWM3_CH1, TC3_CH1, EXTERNAL_INT_15 }, // TC3/WO[1]
 
     {
         NVIC_DisableIRQ(EIC_IRQn);
@@ -41,8 +41,8 @@ input high/low PIN_02;
     }
     EIC->WAKEUP.reg |= (1<<GPIO_PIN);
     {
-        u32 tmp = (PORT->Group[PORTA].PMUX[GPIO_PIN >> 1].reg) & PORT_PMUX_PMUXO(0xF) ;
-        PORT->Group[PORTA].PMUX[GPIO_PIN >> 1].reg = tmp|PORT_PMUX_PMUXE(PIO_EXTINT) ;
+        u32 tmp = (PORT->Group[PORTA].PMUX[GPIO_PIN >> 1].reg) & PORT_PMUX_PMUXE(0xF) ;
+        PORT->Group[PORTA].PMUX[GPIO_PIN >> 1].reg = tmp|PORT_PMUX_PMUXO(PIO_EXTINT) ;
         PORT->Group[PORTA].PINCFG[GPIO_PIN].reg |= PORT_PINCFG_PMUXEN ;
     }
     {
@@ -56,13 +56,13 @@ input high/low PIN_02;
 
 native/const _EIC_Handler;
 spawn async/isr [_EIC_Handler] do
-    emit PIN_02(_digitalRead(2));
+    emit PIN_05(_digitalRead(5));
     { EIC->INTFLAG.reg = 1<<GPIO_PIN; }
 end
 
 _pinMode(13, _OUTPUT);
 _digitalWrite(13, low);
 loop do
-    var high/low v = await PIN_02;
+    var high/low v = await PIN_05;
     _digitalWrite(13, v);
 end
