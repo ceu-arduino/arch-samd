@@ -2,4 +2,5 @@
 
 native/pre do
     ##define CEU_ISR(id) void id (void)
+    ##define S SerialUSB
 end
