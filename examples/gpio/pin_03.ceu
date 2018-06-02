@@ -1,3 +1,5 @@
+// compile with CEU_DEFS=-DCEU_PM_MIN
+
 /*
  * BUTTON => LED
  * Button press/release connected to PIN_03 generates an interrupt.
