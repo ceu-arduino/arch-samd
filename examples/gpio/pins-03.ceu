@@ -69,17 +69,26 @@ native/const _EIC_Handler;
 spawn async/isr [_EIC_Handler] do
     var u32 reg = {EIC->INTFLAG.reg};
     {
+        EIC->INTFLAG.reg   =  @reg;
         EIC->WAKEUP.reg   &= ~@reg;
         EIC->INTENCLR.reg  =  @reg;
-        EIC->INTFLAG.reg   =  @reg;
     }
     emit SAMD_EIC(reg);
 end
 
-_pinMode(2, _INPUT_PULLDOWN);
+_pinMode(2, _INPUT_PULLUP);
+_pinMode(3, _INPUT_PULLDOWN);
 _pinMode(13, _OUTPUT);
-
+_digitalWrite(13, _digitalRead(3));
 loop do
-    var high/low v = await Pin(2);
+    var high/low v = do
+        par do
+            var high/low v2 = await Pin(2);
+            escape v2;
+        with
+            var high/low v3 = await Pin(3);
+            escape v3;
+        end
+    end;
     _digitalWrite(13, v);
 end
