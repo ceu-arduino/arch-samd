@@ -1,3 +1,6 @@
+#ifndef SAMD_ZERO_SAMD_CEU
+#define SAMD_ZERO_SAMD_CEU
+
 // copied from "variants/arduino_zero/variant.cpp"
 native/pre do
     const PinDescription samd_g_APinDescription[]=
@@ -90,3 +93,5 @@ native/pre do
 end
 
 #include "../samd.ceu"
+
+#endif
